@@ -1,0 +1,210 @@
+{
+    "Rules": [
+        {
+            "Type": "Folder",
+            "Path": "C:\\Windows\\Logs",
+            "LogFolderName": "WindowsLogs",
+            "Recurse": false,
+            "FileExtension": "log"
+        },
+        {
+            "Type": "Folder",
+            "Path": "C:\\Windows\\Logs\\Software",
+            "LogFolderName": "WindowsLogs",
+            "Recurse": false,
+            "FileExtension": "log"
+        },
+        {
+            "Type": "Folder",
+            "Path": "C:\\ProgramData\\Microsoft\\IntuneManagementExtension\\Logs",
+            "LogFolderName": "IMELogs",
+            "Recurse": false,
+            "FileExtension": "log"
+        },
+        {
+            "Type": "MultipleFiles",
+            "Path": "C:\\Windows\\Temp",
+            "LogFolderName": "WindowsTemp",
+            "FileNames": "msedge_installer.log;sample_logfile_name.log"
+        },
+        {
+            "Type": "File",
+            "Path": "C:\\Windows\\System32\\drivers\\CrowdStrike\\hbfw.log",
+            "LogFolderName": "CrowdStrike"
+        },
+        {
+            "Type": "Registry",
+            "Path": "HKLM:\\SOFTWARE\\Microsoft\\IntuneManagementExtension",
+            "LogFolderName": "Registry"
+        },
+        {
+            "Type": "MDMDiagnostics",
+            "Area": "Autopilot;DeviceEnrollment;DeviceProvisioning",
+            "LogFolderName": "MDMDiagnostics"
+        },
+        {
+            "Type": "MDMReport",
+            "LogFolderName": "MDMReport"
+        },
+        {
+            "Type": "WindowsUpdateClient",
+            "LogFolderName": "WindowsUpdateClient"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Application",
+            "EventLogPath": "",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "System",
+            "EventLogPath": "",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-AAD",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-AppXDeployment",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-AppXDeploymentServer",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-AppxPackaging",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Management",
+            "EventLogPath": "Microsoft-Windows-BitLocker-API",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-BitLocker-API",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-Bits-Client",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-CodeIntegrity",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-DeviceGuard",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Admin",
+            "EventLogPath": "Microsoft-Windows-DeviceManagement-Enterprise-Diagnostics-Provider",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Autopilot",
+            "EventLogPath": "Microsoft-Windows-DeviceManagement-Enterprise-Diagnostics-Provider",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-DeviceManagement-Enterprise-Diagnostics-Provider",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-HelloForBusiness",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Admin",
+            "EventLogPath": "Microsoft-Windows-ModernDeployment-Diagnostics-Provider",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Autopilot",
+            "EventLogPath": "Microsoft-Windows-ModernDeployment-Diagnostics-Provider",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "ManagementService",
+            "EventLogPath": "Microsoft-Windows-ModernDeployment-Diagnostics-Provider",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Admin",
+            "EventLogPath": "Microsoft-Windows-Provisioning-Diagnostics-Provider",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Autopilot",
+            "EventLogPath": "Microsoft-Windows-Provisioning-Diagnostics-Provider",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "ManagementService",
+            "EventLogPath": "Microsoft-Windows-Provisioning-Diagnostics-Provider",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Admin",
+            "EventLogPath": "Microsoft-Windows-PushNotifications-Platform",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-PushNotifications-Platform",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-Shell-Core",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Operational",
+            "EventLogPath": "Microsoft-Windows-WindowsUpdateClient",
+            "LogFolderName": "EventLogs"
+        },
+        {
+            "Type": "EventLog",
+            "EventLogName": "Admin",
+            "EventLogPath": "Microsoft-Windows-User Device Registration",
+            "LogFolderName": "EventLogs"
+        }
+    ]
+}
