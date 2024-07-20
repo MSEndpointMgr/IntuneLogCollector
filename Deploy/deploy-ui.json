@@ -26,7 +26,7 @@
                         }
                     ]
                 },
-				{
+                {
 					"name": "storage",
 					"label": "Storage",
 					"description": "Select a storage account for where the logs will be sent to from the clients.",
