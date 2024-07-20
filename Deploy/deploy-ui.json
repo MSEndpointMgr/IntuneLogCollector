@@ -1,0 +1,75 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json",
+    "view": {
+        "kind": "Form",
+        "properties": {
+            "title": "MSEndpointMgr - Intune Logs Collector Deployment",
+            "steps": [
+                {
+                    "name": "basics",
+                    "label": "Basics",
+                    "elements": [
+                        {
+                            "name": "resourceScope",
+                            "type": "Microsoft.Common.ResourceScope",
+                            "location": {
+                                "resourceTypes": [
+                                    "microsoft.storage/storageaccounts",
+                                    "microsoft.web/serverfarms",
+                                    "microsoft.insights/components",
+                                    "microsoft.web/sites",
+                                    "microsoft.operationalinsights/workspaces",
+                                    "microsoft.keyvault/vaults",
+                                    "microsoft.resources/resourcegroups"
+                                ]
+                            }
+                        }
+                    ]
+                },
+				{
+					"name": "storage",
+					"label": "Storage",
+					"description": "Select a storage account for where the logs will be sent to from the clients.",
+					"elements": [
+						{
+                            "name": "storageAccountName",
+                            "type": "Microsoft.Common.TextBox",
+                            "label": "Storage Account Name",
+                            "subLabel": "",
+                            "defaultValue": "",
+                            "toolTip": "Specify the storage account name.",
+                            "constraints": {
+                                "required": true,
+                                "regex": "",
+                                "validationMessage": ""
+                            },
+                            "visible": true
+                        }
+					]
+				},
+				{
+                    "name": "tags",
+                    "label": "Tags",
+                    "elements": [
+                        {
+                            "name": "tagsControl",
+                            "type": "Microsoft.Common.TagsByResource",
+                            "resources": [
+                                "Microsoft.Web/serverfarms",
+                                "Microsoft.Web/sites"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        "outputs": {
+            "kind": "ResourceGroup",
+            "location": "[steps('basics').resourceScope.location.name]",
+            "resourceGroupId": "[steps('basics').resourceScope.resourceGroup.id]",
+            "parameters": {
+                "storageAccountName": "[steps('storage').storageAccountName]"
+            }
+        }
+    }
+}
