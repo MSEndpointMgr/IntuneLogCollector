@@ -1,0 +1,293 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/template-spec-create.json#",
+    "properties": {
+        "description": "MSEndpointMgr - Intune Log Collector deployment",
+        "mainTemplate": {
+            "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+            "contentVersion": "1.0.0.0",
+            "parameters": {
+                "storageAccountName": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 24
+                },
+                "storageAccountSku": {
+                    "type": "string",
+                    "defaultValue": "Standard_LRS",
+                    "allowedValues": [ "Premium_LRS", "Premium_ZRS", "Standard_LRS", "Standard_GRS", "Standard_RAGRS", "Standard_ZRS", "Standard_GZRS", "Standard_RAGZRS" ]
+                },
+                "functionAppName": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 32
+                },
+                "functionAppSku": {
+                    "type": "string",
+                    "defaultValue": "Y1",
+                    "allowedValues": [ "Y1", "EP1" ]
+                },
+                "keyVaultName": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 24
+                },
+                "tags": { "type": "object" }
+            },
+            "variables": {},
+            "resources": [
+                {
+                    "type": "Microsoft.Storage/storageAccounts",
+                    "apiVersion": "2023-01-01",
+                    "name": "[parameters('storageAccountName')]",
+                    "location": "[resourceGroup().location]",
+                    "tags": "[parameters('tags')]",
+                    "sku": { "name": "[parameters('storageAccountSku')]" },
+                    "kind": "StorageV2",
+                    "properties": {}
+                },
+                {
+                    "type": "Microsoft.Web/serverfarms",
+                    "apiVersion": "2022-03-01",
+                    "name": "[concat(parameters('functionAppName'), '-plan')]",
+                    "location": "[resourceGroup().location]",
+                    "sku": { "name": "[parameters('functionAppSku')]" },
+                    "properties": { "reserved": false }
+                },
+                {
+                    "type": "Microsoft.Web/sites",
+                    "apiVersion": "2022-03-01",
+                    "name": "[parameters('functionAppName')]",
+                    "location": "[resourceGroup().location]",
+                    "tags": "[parameters('tags')]",
+                    "dependsOn": [ "[resourceId('Microsoft.Web/serverfarms', concat(parameters('functionAppName'), '-plan'))]" ],
+                    "properties": { "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('functionAppName'), '-plan'))]" }
+                },
+                {
+                    "type": "Microsoft.KeyVault/vaults",
+                    "apiVersion": "2023-02-01",
+                    "name": "[parameters('keyVaultName')]",
+                    "location": "[resourceGroup().location]",
+                    "tags": "[parameters('tags')]",
+                    "properties": {
+                        "sku": {
+                            "family": "A",
+                            "name": "standard"
+                        },
+                        "tenantId": "[subscription().tenantId]",
+                        "accessPolicies": []
+                    }
+                }
+            ],
+            "outputs": {}
+        },
+        "uiFormDefinition": {
+            "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json",
+            "view": {
+                "kind": "Form",
+                "properties": {
+                    "title": "MSEndpointMgr - Intune Logs Collector Deployment",
+                    "steps": [
+                        {
+                            "name": "basics",
+                            "label": "Basics",
+                            "elements": [
+                                {
+                                    "name": "resourceScope",
+                                    "type": "Microsoft.Common.ResourceScope",
+                                    "location": { "resourceTypes": [ "microsoft.storage/storageaccounts", "microsoft.web/serverfarms", "microsoft.insights/components", "microsoft.web/sites", "microsoft.operationalinsights/workspaces", "microsoft.keyvault/vaults", "microsoft.resources/resourcegroups" ] }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "storage",
+                            "label": "Storage",
+                            "description": "Configure the Storage Account for where the gathered compressed log files will be stored.",
+                            "elements": [
+                                {
+                                    "name": "storageAccountName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "label": "Storage Account Name",
+                                    "subLabel": "",
+                                    "defaultValue": "",
+                                    "toolTip": "Name of the Storage Account resource",
+                                    "constraints": {
+                                        "required": true,
+                                        "regex": "^[a-z0-9A-Z-]{3,24}$",
+                                        "validationMessage": "Only alphanumeric and hyphen characters are allowed, and the value must be between 3-24 characters long"
+                                    },
+                                    "visible": true
+                                },
+                                {
+                                    "name": "checkStorageAccountNameAvailability",
+                                    "type": "Microsoft.Solutions.ArmApiControl",
+                                    "request": {
+                                        "method": "POST",
+                                        "path": "[concat(subscription().id, '/providers/Microsoft.Storage/checkNameAvailability?api-version=2023-05-01')]",
+                                        "body": {
+                                            "name": "[steps('storage').storageAccountName]",
+                                            "type": "Microsoft.Storage/storageAccounts"
+                                        }
+                                    }
+                                },
+                                {
+                                    "name": "storageAccountSku",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "label": "Storage Account Type",
+                                    "placeholder": "",
+                                    "defaultValue": "Standard_LRS",
+                                    "toolTip": "",
+                                    "constraints": {
+                                        "allowedValues": [
+                                            {
+                                                "label": "Premium_LRS",
+                                                "value": "Premium_LRS"
+                                            },
+                                            {
+                                                "label": "Premium_ZRS",
+                                                "value": "Premium_ZRS"
+                                            },
+                                            {
+                                                "label": "Standard_LRS",
+                                                "value": "Standard_LRS"
+                                            },
+                                            {
+                                                "label": "Standard_GRS",
+                                                "value": "Standard_GRS"
+                                            },
+                                            {
+                                                "label": "Standard_RAGRS",
+                                                "value": "Standard_RAGRS"
+                                            },
+                                            {
+                                                "label": "Standard_ZRS",
+                                                "value": "Standard_ZRS"
+                                            },
+                                            {
+                                                "label": "Standard_GZRS",
+                                                "value": "Standard_GZRS"
+                                            },
+                                            {
+                                                "label": "Standard_RAGZRS",
+                                                "value": "Standard_RAGZRS"
+                                            }
+                                        ],
+                                        "required": false
+                                    },
+                                    "visible": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "functionApp",
+                            "label": "Function App",
+                            "description": "Configure the Function App that the clients will interact with in order to determine what log file rules should be used for gathering, but also to retrieve a SAS token for authentication against the Storage Account for upload of the gathered compressed log files.",
+                            "elements": [
+                                {
+                                    "name": "functionAppName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "label": "Function App Name",
+                                    "subLabel": "",
+                                    "defaultValue": "",
+                                    "toolTip": "Name of the Function App resource",
+                                    "constraints": {
+                                        "validations": [
+                                            {
+                                                "isValid": "[not(equals(steps('functionApp').appServiceAvailabilityApi.nameAvailable, false))]",
+                                                "message": "[concat('Error with the url: ', steps('functionApp').functionAppName, '. Reason: ', steps('functionApp').appServiceAvailabilityApi.reason)]"
+                                            },
+                                            {
+                                                "regex": "^[a-z0-9A-Z-]{3,32}$",
+                                                "message": "Only alphanumeric and hyphen characters are allowed, and the value must be between 3-32 characters long"
+                                            }
+                                        ],
+                                        "required": true
+                                    },
+                                    "visible": true
+                                },
+                                {
+                                    "name": "functionAppSku",
+                                    "type": "Microsoft.Common.DropDown",
+                                    "label": "Function App Type",
+                                    "placeholder": "",
+                                    "defaultValue": "Y1",
+                                    "toolTip": "",
+                                    "constraints": {
+                                        "allowedValues": [
+                                            {
+                                                "label": "Consumption",
+                                                "value": "Y1"
+                                            },
+                                            {
+                                                "label": "PremiumV2",
+                                                "value": "EP1"
+                                            }
+                                        ],
+                                        "required": false
+                                    },
+                                    "visible": true
+                                },
+                                {
+                                    "name": "appServiceAvailabilityApi",
+                                    "type": "Microsoft.Solutions.ArmApiControl",
+                                    "request": {
+                                        "method": "POST",
+                                        "path": "[concat(subscription().id, '/providers/Microsoft.Web/checknameavailability?api-version=2023-01-01')]",
+                                        "body": {
+                                            "name": "[steps('functionApp').functionAppName]",
+                                            "type": "Microsoft.Web/sites"
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            "name": "keyVault",
+                            "label": "Key Vault",
+                            "description": "Configure the Key Vault to ensure secrets used by the Function App are stored securely.",
+                            "elements": [
+                                {
+                                    "name": "keyVaultName",
+                                    "type": "Microsoft.Common.TextBox",
+                                    "label": "Key Vault Name",
+                                    "subLabel": "",
+                                    "defaultValue": "",
+                                    "toolTip": "Name of the Key Vault resource",
+                                    "constraints": {
+                                        "required": true,
+                                        "regex": "^[a-zA-Z0-9-]{3,24}$",
+                                        "validationMessage": "Only alphanumeric and hyphen characters are allowed, and the value must be between 3-24 characters long"
+                                    },
+                                    "visible": true
+                                }
+                            ]
+                        },
+                        {
+                            "name": "tags",
+                            "label": "Tags",
+                            "elements": [
+                                {
+                                    "name": "tags",
+                                    "type": "Microsoft.Common.TagsByResource",
+                                    "resources": [ "Microsoft.Web/serverfarms", "Microsoft.Web/sites" ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "outputs": {
+                    "kind": "ResourceGroup",
+                    "location": "[steps('basics').resourceScope.location.name]",
+                    "resourceGroupId": "[steps('basics').resourceScope.resourceGroup.id]",
+                    "parameters": {
+                        "storageAccountName": "[steps('storage').storageAccountName]",
+                        "storageAccountSku": "[steps('storage').storageAccountSku]",
+                        "functionAppName": "[steps('functionApp').functionAppName]",
+                        "functionAppSku": "[steps('functionApp').functionAppSku]",
+                        "keyVaultName": "[steps('keyVault').keyVaultName]",
+                        "tags": "[steps('tags').tags]"
+                    }
+                }
+            }
+        }
+    }
+}
