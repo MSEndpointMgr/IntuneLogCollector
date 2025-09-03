@@ -23,6 +23,21 @@
                                     "microsoft.resources/resourcegroups"
                                 ]
                             }
+                        },
+                        {
+                            "name": "environment",
+                            "type": "Microsoft.Common.DropDown",
+                            "label": "Deployment Environment",
+                            "defaultValue": "Development",
+                            "toolTip": "Select the environment for deployment. The selected value will be used as a suffix in resource names (e.g., '-dev' for Development, '-prod' for Production).",
+                            "constraints": {
+                                "allowedValues": [
+                                    { "label": "Development", "value": "Development" },
+                                    { "label": "Production", "value": "Production" }
+                                ],
+                                "required": true
+                            },
+                            "visible": true
                         }
                     ]
                 },
@@ -37,7 +52,7 @@
                             "label": "Storage Account Name",
                             "subLabel": "",
                             "defaultValue": "",
-                            "toolTip": "Name of the Storage Account resource",
+                            "toolTip": "Name of the Storage Account resource. The full name will be '[storageAccountName]-[env]', where [env] is 'dev' or 'prod' depending on the selected environment.",
                             "constraints": {
                                 "required": true,
                                 "regex": "^[a-z0-9A-Z-]{3,24}$",
@@ -116,7 +131,7 @@
                             "label": "Function App Name",
                             "subLabel": "",
                             "defaultValue": "",
-                            "toolTip": "Name of the Function App resource",
+                            "toolTip": "Name of the Function App resource. The full name will be '[functionAppName]-[env]', where [env] is 'dev' or 'prod' depending on the selected environment.",
                             "constraints": {
                                 "validations": [
                                     {
@@ -179,7 +194,7 @@
                             "label": "Key Vault Name",
                             "subLabel": "",
                             "defaultValue": "",
-                            "toolTip": "Name of the Key Vault resource",
+                            "toolTip": "Name of the Key Vault resource. The full name will be '[keyVaultName]-[env]', where [env] is 'dev' or 'prod' depending on the selected environment.",
                             "constraints": {
                                 "required": true,
                                 "regex": "^[a-zA-Z0-9-]{3,24}$",
@@ -215,7 +230,8 @@
                 "functionAppName": "[steps('functionApp').functionAppName]",
                 "functionAppSku": "[steps('functionApp').functionAppSku]",
                 "keyVaultName": "[steps('keyVault').keyVaultName]",
-                "tags": "[steps('tags').tags]"
+                "tags": "[steps('tags').tags]",
+                "environment": "[steps('basics').environment]"
             }
         }
     }
