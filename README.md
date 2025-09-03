@@ -40,14 +40,16 @@ This repository contains an Azure solution for deploying the Intune Log Collecto
 
 4. **Get the template spec resource ID:**
    ```pwsh
-   (Get-AzTemplateSpec -Name "IntuneLogCollector" -ResourceGroupName "<your-resource-group>").Versions["1.0.0"].Id
+   $specId = (Get-AzTemplateSpec -Name "IntuneLogCollector" -ResourceGroupName "<your-resource-group>").Versions["1.0.0"].Id
    ```
+   Save this resource ID for deployment.
 
-5. **Share the resource ID:**
-   Users can deploy using the Azure portal:
-   ```
-   https://portal.azure.com/#create/Microsoft.TemplateSpec/resourceId/<template-spec-resource-id>
-   ```
+5. **Deploy the solution using the template spec:**
+   - Open the Azure portal and navigate to:
+     ```
+     https://portal.azure.com/#create/Microsoft.TemplateSpec/resourceId/$specId
+     ```
+   - This will launch the custom deployment experience for the Intune Log Collector solution, allowing you to configure and deploy all required resources using the portal form.
 
 ### 2. Deploy Directly from ARM Template (No Custom UI)
 
