@@ -1,1 +1,0 @@
-This folder contains the compressed files used by ARM to install the solution.
