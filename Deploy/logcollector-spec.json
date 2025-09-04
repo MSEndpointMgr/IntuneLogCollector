@@ -60,9 +60,9 @@
     {
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
       "apiVersion": "2023-01-01",
-      "name": "[concat(parameters('storageAccountName'), '-', variables('environmentShortName'), '/default/rules')]",
+      "name": "[concat(toLower(concat(parameters('storageAccountName'), variables('environmentShortName'))), '/default/rules')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', concat(parameters('storageAccountName'), '-', variables('environmentShortName')))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', toLower(concat(parameters('storageAccountName'), variables('environmentShortName'))))]"
       ],
       "properties": {
         "publicAccess": "None"
@@ -71,9 +71,9 @@
     {
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
       "apiVersion": "2023-01-01",
-      "name": "[concat(parameters('storageAccountName'), '-', variables('environmentShortName'), '/default/logs')]",
+      "name": "[concat(toLower(concat(parameters('storageAccountName'), variables('environmentShortName'))), '/default/logs')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts', concat(parameters('storageAccountName'), '-', variables('environmentShortName')))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', toLower(concat(parameters('storageAccountName'), variables('environmentShortName'))))]"
       ],
       "properties": {
         "publicAccess": "None",
@@ -93,16 +93,16 @@
       "name": "[concat(concat(parameters('keyVaultName'), '-', variables('environmentShortName')), '/StorageAccountKey')]",
       "dependsOn": [
         "[resourceId('Microsoft.KeyVault/vaults', concat(parameters('keyVaultName'), '-', variables('environmentShortName')))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', concat(parameters('storageAccountName'), '-', variables('environmentShortName')))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', toLower(concat(parameters('storageAccountName'), variables('environmentShortName'))))]"
       ],
       "properties": {
-        "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', concat(parameters('storageAccountName'), '-', variables('environmentShortName'))), '2023-01-01').keys[0].value]"
+        "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', toLower(concat(parameters('storageAccountName'), variables('environmentShortName')))), '2023-01-01').keys[0].value]"
       }
     },
     {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2023-01-01",
-      "name": "[concat(parameters('storageAccountName'), '-', variables('environmentShortName'))]",
+      "name": "[toLower(concat(parameters('storageAccountName'), variables('environmentShortName')))]",
       "location": "[resourceGroup().location]",
       "tags": "[parameters('tags')]",
       "sku": {
@@ -135,6 +135,18 @@
           "name": "standard"
         },
         "tenantId": "[variables('tenantId')]",
+        "accessPolicies": []
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/accessPolicies",
+      "apiVersion": "2023-02-01",
+      "name": "[concat(parameters('keyVaultName'), '-', variables('environmentShortName'), '/add')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', concat(parameters('keyVaultName'), '-', variables('environmentShortName')))]",
+        "[resourceId('Microsoft.Web/sites', concat(parameters('functionAppName'), '-', variables('environmentShortName')))]"
+      ],
+      "properties": {
         "accessPolicies": [
           {
             "tenantId": "[variables('tenantId')]",
@@ -154,7 +166,7 @@
       "kind": "functionapp",
       "tags": "[parameters('tags')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', concat(parameters('functionAppName'), '-plan'))]"
+  "[resourceId('Microsoft.Web/serverfarms', concat(parameters('functionAppName'), '-', variables('environmentShortName'), '-plan'))]"
       ],
       "properties": {
           "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('functionAppName'), '-', variables('environmentShortName'), '-plan'))]",
@@ -170,15 +182,15 @@
           "appSettings": [
             {
               "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-01-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', toLower(concat(parameters('storageAccountName'), variables('environmentShortName'))), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', toLower(concat(parameters('storageAccountName'), variables('environmentShortName')))), '2023-01-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
             },
             {
               "name": "AllowedStorageAccounts",
-              "value": "[concat(parameters('storageAccountName'), '-', variables('environmentShortName'))]"
+              "value": "[toLower(concat(parameters('storageAccountName'), variables('environmentShortName')))]"
             },
             {
               "name": "StorageAccountLogsName",
-              "value": "[concat(parameters('storageAccountName'), '-', variables('environmentShortName'))]"
+              "value": "[toLower(concat(parameters('storageAccountName'), variables('environmentShortName')))]"
             },
             {
               "name": "StorageAccountLogsAccessKey",
@@ -206,7 +218,7 @@
             },
             {
               "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2023-01-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', toLower(concat(parameters('storageAccountName'), variables('environmentShortName'))), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', toLower(concat(parameters('storageAccountName'), variables('environmentShortName')))), '2023-01-01').keys[0].value, ';EndpointSuffix=', environment().suffixes.storage)]"
             },
             {
               "name": "WEBSITE_CONTENTSHARE",
@@ -221,12 +233,11 @@
       }
     },
     {
-      "type": "Microsoft.Web/sites/slots/extensions",
+      "type": "Microsoft.Web/sites/extensions",
       "apiVersion": "2022-03-01",
-      "name": "[concat(parameters('functionAppName'), '-', variables('environmentShortName'), '/production/zipdeploy')]",
-      "location": "[resourceGroup().location]",
+      "name": "[concat(parameters('functionAppName'), '-', variables('environmentShortName'), '/zipdeploy')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
+        "[resourceId('Microsoft.Web/sites', concat(parameters('functionAppName'), '-', variables('environmentShortName')))]"
       ],
       "properties": {
         "packageUri": "https://github.com/MSEndpointMgr/IntuneLogCollector/raw/main/Packages/IntuneLogCollector-FuncApp-1.0.0.zip"

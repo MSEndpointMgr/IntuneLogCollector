@@ -114,7 +114,7 @@
                                         "value": "Standard_RAGZRS"
                                     }
                                 ],
-                                "required": false
+                                "required": true
                             },
                             "visible": true
                         }
@@ -165,7 +165,7 @@
                                         "value": "EP1"
                                     }
                                 ],
-                                "required": false
+                                "required": true
                             },
                             "visible": true
                         },
