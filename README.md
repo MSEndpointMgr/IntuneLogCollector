@@ -173,7 +173,7 @@ Collects files from a folder, optionally filtered by extension and recursion.
 ```
 - **Type**: "Folder"
 - **Path**: Folder path
-- **LogFolderName**: Destination folder name
+- **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 - **Recurse**: (optional) true/false
 - **FileExtension**: (optional) file extension to filter
 
@@ -189,7 +189,7 @@ Collects specific files from a folder.
 ```
 - **Type**: "MultipleFiles"
 - **Path**: Folder path
-- **LogFolderName**: Destination folder name
+- **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 - **FileNames**: Semicolon-separated list of file names
 
 #### File
@@ -203,7 +203,7 @@ Collects a single file.
 ```
 - **Type**: "File"
 - **Path**: File path
-- **LogFolderName**: Destination folder name
+- **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 
 #### Registry
 Exports a registry key.
@@ -216,7 +216,7 @@ Exports a registry key.
 ```
 - **Type**: "Registry"
 - **Path**: Registry key path
-- **LogFolderName**: Destination folder name
+- **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 
 #### MDMDiagnostics
 Collects MDM diagnostics for specified areas.
@@ -229,7 +229,7 @@ Collects MDM diagnostics for specified areas.
 ```
 - **Type**: "MDMDiagnostics"
 - **Area**: Semicolon-separated diagnostic areas
-- **LogFolderName**: Destination folder name
+- **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 
 #### MDMReport
 Collects MDM report.
@@ -240,7 +240,7 @@ Collects MDM report.
 }
 ```
 - **Type**: "MDMReport"
-- **LogFolderName**: Destination folder name
+- **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 
 #### WindowsUpdateClient
 Collects Windows Update Client logs.
@@ -251,7 +251,7 @@ Collects Windows Update Client logs.
 }
 ```
 - **Type**: "WindowsUpdateClient"
-- **LogFolderName**: Destination folder name
+- **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 
 #### EventLog
 Exports Windows event logs.
@@ -266,7 +266,7 @@ Exports Windows event logs.
 - **Type**: "EventLog"
 - **EventLogName**: Log name (e.g., Application, System, Operational, Admin, etc.)
 - **EventLogPath**: (optional) Provider path (e.g., Microsoft-Windows-AAD)
-- **LogFolderName**: Destination folder name
+- **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 
 Use only these constructs and attributes for compatibility with the Proactive Remediation script.
 
