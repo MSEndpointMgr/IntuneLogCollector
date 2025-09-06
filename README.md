@@ -7,8 +7,8 @@ This repository contains an Azure solution for deploying the Intune Log Collecto
 - Deploys an Azure Function App, Storage Account, and Key Vault.
 - Supports deployment via Azure Template Spec or direct ARM template.
 
-## Proactive Remediation Script
-- The main logic for log gathering is in the Proactive Remediation script (`Proactive Remediation/Detection.ps1`).
+## Remediation Script
+- The main logic for log gathering is in the Remediation script (`Remediation Script/Detection.ps1`).
 - The script connects to the Function App authenticating itself using the Entra ID device registration certificate, downloads the `LogsGatherRules.json` file from the `rules` container, and reads it for instructions on which files to collect. When all required data is gathered, the Function App is queried again for a SAS token eligible for the Storage Account container named 'logs', where the compressed archive of all gathered logs are uploaded.
 
 ## Prerequisites
@@ -73,11 +73,21 @@ After deployment, you must upload the `LogsGatherRules.json` file to the `rules`
 4. Click **Upload** and select your `LogsGatherRules.json` file.
 5. Confirm the file appears in the container.
 
+
 Alternatively, you can use Azure CLI or PowerShell:
+
+**Azure CLI:**
 ```pwsh
 az storage blob upload --account-name <storage-account-name> --container-name rules --name LogsGatherRules.json --file Files/LogsGatherRules.json --auth-mode login
 ```
 Replace `<storage-account-name>` with your actual storage account name.
+
+**PowerShell (Az.Storage module):**
+```pwsh
+$ctx = New-AzStorageContext -StorageAccountName '<storage-account-name>'
+Set-AzStorageBlobContent -Context $ctx -Container 'rules' -File 'Files/LogsGatherRules.json' -Blob 'LogsGatherRules.json'
+```
+Replace `<storage-account-name>` with your actual storage account name. You may be prompted to authenticate if not already logged in.
 
 ---
 ### Configuring the Detection.ps1 Script
@@ -111,22 +121,20 @@ $FunctionGetBlobContent = "https://<function-app-name>.azurewebsites.net/api/Get
 - `$StorageAccountRulesName`: The name of your Storage Account (same as above).
 - `$StorageAccountRulesContainerName`: Should be `rules`.
 
-### Setting Up Proactive Remediation in Intune
+### Setting Up Remediation Script in Intune
 1. **Prepare the Detection Script:**
-   - Ensure the script has been modified as explained in the previous section.
-2. **Create a Proactive Remediation in Intune:**
-   - Go to the Microsoft Endpoint Manager admin center.
-   - Navigate to **Reports > Endpoint analytics > Proactive remediations**.
-   - Click **Create script package**.
-   - Upload `Detection.ps1` as the detection script. (You can also add a remediation script if needed.)
-   - Configure assignment and schedule as desired.
+  - Ensure the script has been modified as explained in the previous section.
+2. **Create a Remediation in Intune:**
+  - Go to the Microsoft Endpoint Manager admin center.
+  - Navigate to **Devices > Scripts and remediations > Remediations**.
+  - Click **Create**.
+  - Upload `Detection.ps1` as the detection script. (You can also add a remediation script if needed.)
+  - Configure assignment and schedule as desired.
 3. **Ensure Access to Storage Account:**
-   - Devices running the script must have network access to the Azure Storage Account.
-   - The script uses the rules file in the `rules` container to determine what to collect.
+  - Devices running the script must have internet access to the Azure Storage Account.
+  - The script uses the rules file in the `rules` container to determine what to collect.
 4. **Update Log Collection Rules:**
-   - To change what is collected, update `LogsGatherRules.json` and upload it to the `rules` container in your storage account.
-
-For more details, refer to the official [Intune Proactive Remediation documentation](https://learn.microsoft.com/en-us/mem/analytics/proactive-remediations) or open an issue for support.
+  - To change what is collected, update `LogsGatherRules.json` and upload it to the `rules` container in your storage account.
 
 ---
 **Summary:**
@@ -142,7 +150,7 @@ For more details, refer to the official [Intune Proactive Remediation documentat
 
 ### Allowed Attributes in LogsGatherRules.json
 
-The `LogsGatherRules.json` file supports only the attributes shown in the sample file. The Proactive Remediation script will only process these attributes:
+The `LogsGatherRules.json` file supports only the attributes shown in the sample file. The Remediation script will only process these attributes:
 
 - **Type**: Specifies the rule type. Allowed values include `Folder`, `MultipleFiles`, `File`, `Registry`, `MDMDiagnostics`, `MDMReport`, `WindowsUpdateClient`, `EventLog`.
 - **Path**: The file, folder, or registry path to collect.
@@ -154,7 +162,7 @@ The `LogsGatherRules.json` file supports only the attributes shown in the sample
 - **EventLogName**: (For `EventLog` type) The name of the event log to collect.
 - **EventLogPath**: (For `EventLog` type) The event log path (provider).
 
-No other attributes are supported. Only use the attributes and types present in the sample file to ensure compatibility with the Proactive Remediation script.
+No other attributes are supported. Only use the attributes and types present in the sample file to ensure compatibility with the Remediation script.
 
 ### Rule Types and Attribute Constructs in LogsGatherRules.json
 
@@ -228,7 +236,7 @@ Collects MDM diagnostics for specified areas.
 }
 ```
 - **Type**: "MDMDiagnostics"
-- **Area**: Semicolon-separated diagnostic areas
+- **Area**: Semicolon-separated diagnostic areas. For a list of available diagnostic areas, see the official Microsoft documentation: [MDMDiagnosticsTool.exe command-line options](https://learn.microsoft.com/en-us/windows/client-management/mdmdiagnosticstool-command-line)
 - **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 
 #### MDMReport
@@ -268,7 +276,7 @@ Exports Windows event logs.
 - **EventLogPath**: (optional) Provider path (e.g., Microsoft-Windows-AAD)
 - **LogFolderName**: Logical folder inside the compressed archive containing the different collected logs
 
-Use only these constructs and attributes for compatibility with the Proactive Remediation script.
+Use only these constructs and attributes for compatibility with the Remediation script.
 
 ## Support
 For issues or questions, open an issue in this repository or contact the maintainers.
