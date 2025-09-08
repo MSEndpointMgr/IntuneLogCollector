@@ -1,23 +1,23 @@
 # Intune Log Collector Deployment
 
-This repository contains an Azure solution for deploying the Intune Log Collector using Azure Resource Manager (ARM) templates and a custom portal UI.
+This repository contains an Azure solution for deploying the Intune Log Collector using Bicep (recommended) or ARM templates, and a custom portal UI.
 
 ## Solution Overview
 - Collect any log file, directory or event log from Intune managed devices.
 - Deploys an Azure Function App, Storage Account, and Key Vault.
-- Supports deployment via Azure Template Spec or direct ARM template.
-
-## Remediation Script
+- Supports deployment via Azure Template Spec (with Bicep or ARM template) or direct ARM template.
 - The main logic for log gathering is in the Remediation script (`Remediation Script/Detection.ps1`).
 - The script connects to the Function App authenticating itself using the Entra ID device registration certificate, downloads the `LogsGatherRules.json` file from the `rules` container, and reads it for instructions on which files to collect. When all required data is gathered, the Function App is queried again for a SAS token eligible for the Storage Account container named 'logs', where the compressed archive of all gathered logs are uploaded.
 
-## Prerequisites
+## Requirements
 - Azure subscription with permissions to create resources and template specs.
+- The user running the deployment must have at least the **Contributor** role on the target resource group. This is required for all resources and for the deployment script to execute successfully.
 - [Azure PowerShell](https://docs.microsoft.com/powershell/azure/new-azureps-module-az) or [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli) installed.
 
 ## Deployment Options
 
-### 1. Publish as Azure Template Spec (Recommended for Custom UI)
+
+### 1. Publish as Azure Template Spec (Recommended)
 
 1. **Connect to Azure with a specific tenant and subscription:**
    ```pwsh
@@ -30,15 +30,32 @@ This repository contains an Azure solution for deploying the Intune Log Collecto
    git clone https://github.com/MSEndpointMgr/IntuneLogCollector.git
    ```
 
-3. **Publish the template spec:**
+
+3. **Publish the template spec (Bicep):**
+
+   **PowerShell:**
+   > [!NOTE]
+   > Bicep CLI must be installed locally for PowerShell deployments. [Install Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
    ```pwsh
    New-AzTemplateSpec `
      -Name "IntuneLogCollector" `
      -Version "1.0.0" `
      -ResourceGroupName "<your-resource-group>" `
      -Location "<your-location>" `
-     -TemplateFile "Deploy/logcollector-spec.json" `
+     -TemplateFile "Deploy/logcoll-spec.bicep" `
      -UIFormDefinitionFile "Deploy/logcollector-def.json"
+   ```
+
+   **Azure CLI:**
+   > [!NOTE]
+   > Bicep support is built into Azure CLI (no separate install required).
+  ```pwsh
+  # Install only the required Microsoft Graph submodules for this scenario:
+  Install-Module Microsoft.Graph.Authentication -Scope CurrentUser
+  Install-Module Microsoft.Graph.Applications -Scope CurrentUser
+  ```
+  > The required commands (Connect-MgGraph, Get-MgServicePrincipal, New-MgServicePrincipalAppRoleAssignment, etc.) are available after importing these submodules. You do not need to install the full Microsoft.Graph module.
+     --ui-form-definition Deploy/logcollector-def.json
    ```
    Replace `<your-resource-group>` and `<your-location>` with your values.
 
@@ -55,13 +72,91 @@ This repository contains an Azure solution for deploying the Intune Log Collecto
      ```
    - This will launch the custom deployment experience for the Intune Log Collector solution, allowing you to configure and deploy all required resources using the portal form.
 
-### 2. Deploy Directly from ARM Template (No Custom UI)
+### 2. (Optional) Deploy Directly from ARM Template (No Custom UI)
 
-1. Use the Deploy to Azure button and follow the portal prompts to configure and deploy the solution:
-   
-   [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMSEndpointMgr%2FIntuneLogCollector%2Fmain%2FDeploy%2Flogcollector-spec.json)
+> **Note:** Bicep is the recommended format for new deployments. Direct ARM/JSON deployment is supported for legacy scenarios only.
+
+Use the Deploy to Azure button and follow the portal prompts to configure and deploy the solution:
+
+  [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMSEndpointMgr%2FIntuneLogCollector%2Fmain%2FDeploy%2Flogcoll-spec-main.json)
+
+### Post-Deployment Cleanup
+
+After the deployment completes (using either the Azure Deploy button or Template Spec method), you can safely remove the following resources from the resource group:
+
+- `logcoll-script-identity` (user-assigned managed identity)
+- `logsContainerPolicyScript` (deployment script resource)
+- `zipDeployScript` (deployment script resource)
+
+These resources are only required during the initial deployment and are not needed for the ongoing operation of the solution.
 
 ## Configuration
+
+### Granting Microsoft Graph Device.Read.All Permission to the Function App
+
+The managed system identity of the Function App must be granted the Microsoft Graph `Device.Read.All` application permission. This is required because the Function App queries Microsoft Entra ID for device records to validate and authorize requests (using the public key of the device registration certificate that's present in the alternativeSecurityIds property of the device record) from coming from the Intune-managed devices. Without this permission, the Function App will not be able to retrieve device information and will fail to process requests from clients.
+
+#### How to assign Device.Read.All to the Function App's managed identity
+> **Note:** Assigning Microsoft Graph application permissions to a managed identity must be done via PowerShell and Microsoft Graph API. The Azure Portal does not support this for managed identities as of 2025-09-08. If this changes in the future, the steps below can simply be skipped and the permission be assigned through the Azure portal.
+
+1. **Install the Microsoft Graph PowerShell module (if not already installed):**
+  ```pwsh
+  # Install only the minimal required Microsoft Graph submodules for this scenario:
+  Install-Module Microsoft.Graph.Authentication, Microsoft.Graph.Applications -Scope CurrentUser
+  ```
+  > The required commands (Connect-MgGraph, Get-MgServicePrincipal, New-MgServicePrincipalAppRoleAssignment, etc.) are available after installing these child modules. You do not need to install the full Microsoft.Graph module.
+
+2. **Connect to Microsoft Graph as a `Global Administrator`, `Cloud Application Administrator` or `Application Administrator`:**
+  ```pwsh
+  Connect-MgGraph -Scopes 'Application.ReadWrite.All','AppRoleAssignment.ReadWrite.All'
+  ```
+
+3. **Find the managed identity's service principal (replace `<function-app-name>` with your Function App name):**
+  ```pwsh
+  $sp = Get-MgServicePrincipal -Filter "displayName eq '<function-app-name>'"
+  ```
+
+4. **Get the Device.Read.All app role ID for Microsoft Graph:**
+  ```pwsh
+  $graphSp = Get-MgServicePrincipal -Filter "appId eq '00000003-0000-0000-c000-000000000000'"
+  $role = $graphSp.AppRoles | Where-Object { $_.Value -eq 'Device.Read.All' -and $_.AllowedMemberTypes -contains 'Application' }
+  ```
+
+5. **Assign Device.Read.All to the managed identity:**
+  ```pwsh
+  New-MgServicePrincipalAppRoleAssignment -ServicePrincipalId $sp.Id -PrincipalId $sp.Id -ResourceId $graphSp.Id -AppRoleId $role.Id
+  ```
+
+6. **Verify the permission assignment:**
+  ```pwsh
+  Get-MgServicePrincipalAppRoleAssignment -ServicePrincipalId $sp.Id | Where-Object { $_.ResourceDisplayName -eq 'Microsoft Graph' }
+  ```
+
+> **You must be a Global Administrator or have sufficient directory permissions to grant admin consent for application permissions.**
+
+Once this is done, the Function App will be able to query device records in Microsoft Graph as required for the solution to function.
+
+#### Why is Device.Read.All needed?
+- The Function App uses Microsoft Graph to look up device objects and their properties in your tenant.
+- This is essential for validating device identity, alternative security IDs, and other device attributes as part of the log collection workflow.
+
+#### How to assign Device.Read.All to the Function App's managed identity
+1. **Register the permission in Azure Portal:**
+   - Go to **Azure Active Directory** > **App registrations** > **Managed Identities**.
+   - Find and select your Function App's managed identity (search for the Function App name).
+   - In the left menu, select **API permissions** > **Add a permission**.
+   - Choose **Microsoft Graph** > **Application permissions**.
+   - Search for and select `Device.Read.All`.
+   - Click **Add permissions**.
+2. **Grant admin consent:**
+   - Still in the **API permissions** blade, click **Grant admin consent for [Tenant]**.
+   - Confirm the action. The status should show as "Granted for [Tenant]".
+
+> **Note:** You must be a Global Administrator or have sufficient directory permissions to grant admin consent for application permissions.
+
+Once this is done, the Function App will be able to query device records in Microsoft Graph as required for the solution to function.
+
+---
 ### Uploading Log Collection Rules to Storage Account
 
 After deployment, you must upload the `LogsGatherRules.json` file to the `rules` container in your Storage Account. This file controls what logs are collected from endpoints.
@@ -121,6 +216,7 @@ $FunctionGetBlobContent = "https://<function-app-name>.azurewebsites.net/api/Get
 - `$StorageAccountRulesName`: The name of your Storage Account (same as above).
 - `$StorageAccountRulesContainerName`: Should be `rules`.
 
+---
 ### Setting Up Remediation Script in Intune
 1. **Prepare the Detection Script:**
   - Ensure the script has been modified as explained in the previous section.
@@ -164,6 +260,7 @@ The `LogsGatherRules.json` file supports only the attributes shown in the sample
 
 No other attributes are supported. Only use the attributes and types present in the sample file to ensure compatibility with the Remediation script.
 
+---
 ### Rule Types and Attribute Constructs in LogsGatherRules.json
 
 Below are the supported rule types and their required/optional attributes, based on the sample file:
