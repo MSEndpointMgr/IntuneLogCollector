@@ -49,7 +49,7 @@
                         {
                             "name": "storageAccountName",
                             "type": "Microsoft.Common.TextBox",
-                            "label": "Storage Account Name",
+                            "label": "Name",
                             "subLabel": "",
                             "defaultValue": "",
                             "toolTip": "Name of the Storage Account resource. The full name will be '[storageAccountName]-[env]', where [env] is 'dev' or 'prod' depending on the selected environment.",
@@ -75,7 +75,7 @@
                         {
                             "name": "storageAccountSku",
                             "type": "Microsoft.Common.DropDown",
-                            "label": "Storage Account Type",
+                            "label": "SKU",
                             "placeholder": "",
                             "defaultValue": "Standard_LRS",
                             "toolTip": "",
@@ -128,7 +128,7 @@
                         {
                             "name": "functionAppName",
                             "type": "Microsoft.Common.TextBox",
-                            "label": "Function App Name",
+                            "label": "Name",
                             "subLabel": "",
                             "defaultValue": "",
                             "toolTip": "Name of the Function App resource. The full name will be '[functionAppName]-[env]', where [env] is 'dev' or 'prod' depending on the selected environment.",
@@ -150,20 +150,25 @@
                         {
                             "name": "functionAppSku",
                             "type": "Microsoft.Common.DropDown",
-                            "label": "Function App Type",
-                            "placeholder": "",
+                            "label": "App Service plan type:",
+                            "placeholder": "Select an app service plan",
                             "defaultValue": "Y1",
-                            "toolTip": "",
+                            "toolTip": "Select the App Service plan (Consumption, Premium, or Dedicated).",
                             "constraints": {
                                 "allowedValues": [
-                                    {
-                                        "label": "Consumption",
-                                        "value": "Y1"
-                                    },
-                                    {
-                                        "label": "PremiumV2",
-                                        "value": "EP1"
-                                    }
+                                    { "label": "Consumption (Y1)", "value": "Y1" },
+                                    { "label": "Premium (EP1)", "value": "EP1" },
+                                    { "label": "Premium (EP2)", "value": "EP2" },
+                                    { "label": "Premium (EP3)", "value": "EP3" },
+                                    { "label": "Standard (S1)", "value": "S1" },
+                                    { "label": "Standard (S2)", "value": "S2" },
+                                    { "label": "Standard (S3)", "value": "S3" },
+                                    { "label": "PremiumV2 (P1V2)", "value": "P1V2" },
+                                    { "label": "PremiumV2 (P2V2)", "value": "P2V2" },
+                                    { "label": "PremiumV2 (P3V2)", "value": "P3V2" },
+                                    { "label": "PremiumV3 (P1V3)", "value": "P1V3" },
+                                    { "label": "PremiumV3 (P2V3)", "value": "P2V3" },
+                                    { "label": "PremiumV3 (P3V3)", "value": "P3V3" }
                                 ],
                                 "required": true
                             },
@@ -191,7 +196,7 @@
                         {
                             "name": "keyVaultName",
                             "type": "Microsoft.Common.TextBox",
-                            "label": "Key Vault Name",
+                            "label": "Name",
                             "subLabel": "",
                             "defaultValue": "",
                             "toolTip": "Name of the Key Vault resource. The full name will be '[keyVaultName]-[env]', where [env] is 'dev' or 'prod' depending on the selected environment.",

@@ -18,6 +18,21 @@ param storageAccountSku string = 'Standard_LRS'
 param functionAppName string
 
 // Param: functionAppSku
+@allowed([
+  'Y1'      // Consumption
+  'EP1'     // Premium
+  'EP2'
+  'EP3'
+  'S1'      // Dedicated (Standard)
+  'S2'
+  'S3'
+  'P1V2'    // Dedicated (PremiumV2)
+  'P2V2'
+  'P3V2'
+  'P1V3'    // Dedicated (PremiumV3)
+  'P2V3'
+  'P3V3'
+])
 param functionAppSku string = 'Y1'
 
 // Param: keyVaultName
@@ -50,7 +65,10 @@ resource storageBlobContributor 'Microsoft.Authorization/roleAssignments@2020-04
   name: guid(scriptIdentity.id, 'StorageBlobDataContributor')
   scope: storageAccount
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+    )
     principalId: scriptIdentity.properties.principalId
   }
 }
@@ -60,7 +78,10 @@ resource storageKeyOperator 'Microsoft.Authorization/roleAssignments@2020-04-01-
   name: guid(scriptIdentity.id, 'StorageKeyOperator')
   scope: storageAccount
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '81a9662b-bebf-436f-a333-f67b29880f12')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '81a9662b-bebf-436f-a333-f67b29880f12'
+    )
     principalId: scriptIdentity.properties.principalId
   }
 }
@@ -70,7 +91,10 @@ resource functionAppWebsiteContributor 'Microsoft.Authorization/roleAssignments@
   name: guid(scriptIdentity.id, 'WebsiteContributor')
   scope: functionApp
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'de139f84-1756-47ae-9be6-808fbbe84772')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'de139f84-1756-47ae-9be6-808fbbe84772'
+    )
     principalId: scriptIdentity.properties.principalId
   }
 }
