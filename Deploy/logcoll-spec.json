@@ -1,0 +1,357 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.37.4.10188",
+      "templateHash": "12251220364761148169"
+    }
+  },
+  "parameters": {
+    "environment": {
+      "type": "string",
+      "defaultValue": "Development",
+      "allowedValues": [
+        "Development",
+        "Production"
+      ]
+    },
+    "storageAccountName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 24,
+      "metadata": {
+        "description": "The name of the storage account. Must be 3-24 characters, lowercase, and alphanumeric. Must be globally unique in Azure."
+      }
+    },
+    "storageAccountSku": {
+      "type": "string",
+      "defaultValue": "Standard_LRS"
+    },
+    "functionAppName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 32,
+      "metadata": {
+        "description": "The name of the Function App. Must be 3-32 characters, lowercase, and alphanumeric."
+      }
+    },
+    "functionAppSku": {
+      "type": "string",
+      "defaultValue": "Y1"
+    },
+    "keyVaultName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 24,
+      "metadata": {
+        "description": "The name of the Key Vault. Must be 3-24 characters, lowercase, and alphanumeric. Must be globally unique in Azure."
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {}
+    }
+  },
+  "variables": {
+    "environmentShortName": "[if(equals(parameters('environment'), 'Production'), 'prod', 'dev')]",
+    "storageAccountFullName": "[toLower(substring(format('{0}{1}', parameters('storageAccountName'), variables('environmentShortName')), 0, min(length(format('{0}{1}', parameters('storageAccountName'), variables('environmentShortName'))), 24)))]",
+    "functionAppPlanName": "[format('{0}-{1}-plan', parameters('functionAppName'), variables('environmentShortName'))]",
+    "functionAppResourceName": "[format('{0}-{1}', parameters('functionAppName'), variables('environmentShortName'))]",
+    "keyVaultResourceName": "[format('{0}-{1}', parameters('keyVaultName'), variables('environmentShortName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "apiVersion": "2023-01-31",
+      "name": "logcoll-script-identity",
+      "location": "[resourceGroup().location]"
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('storageAccountFullName'))]",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity'), 'StorageBlobDataContributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity'), '2023-01-31').principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountFullName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "scope": "[format('Microsoft.Storage/storageAccounts/{0}', variables('storageAccountFullName'))]",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity'), 'StorageKeyOperator')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '81a9662b-bebf-436f-a333-f67b29880f12')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity'), '2023-01-31').principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity')]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountFullName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "scope": "[format('Microsoft.Web/sites/{0}', variables('functionAppResourceName'))]",
+      "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity'), 'WebsiteContributor')]",
+      "properties": {
+        "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'de139f84-1756-47ae-9be6-808fbbe84772')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity'), '2023-01-31').principalId]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppResourceName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[variables('storageAccountFullName')]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "sku": {
+        "name": "[parameters('storageAccountSku')]"
+      },
+      "kind": "StorageV2"
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-01-01",
+      "name": "[format('{0}/default/rules', variables('storageAccountFullName'))]",
+      "properties": {
+        "publicAccess": "None"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountFullName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-01-01",
+      "name": "[format('{0}/default/logs', variables('storageAccountFullName'))]",
+      "properties": {
+        "publicAccess": "None"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountFullName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "name": "logsContainerPolicyScript",
+      "location": "[resourceGroup().location]",
+      "kind": "AzureCLI",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity'))]": {}
+        }
+      },
+      "properties": {
+        "azCliVersion": "2.20.0",
+        "scriptContent": "      connectionString=$(az storage account show-connection-string --name $STORAGE_ACCOUNT_NAME --resource-group $RESOURCE_GROUP --query connectionString -o tsv)\r\n      az storage container policy create \\\r\n        --account-name $STORAGE_ACCOUNT_NAME \\\r\n        --container-name $CONTAINER_NAME \\\r\n        --name $POLICY_NAME \\\r\n        --permission $PERMISSION \\\r\n        --connection-string \"$connectionString\"\r\n    ",
+        "environmentVariables": [
+          {
+            "name": "STORAGE_ACCOUNT_NAME",
+            "value": "[variables('storageAccountFullName')]"
+          },
+          {
+            "name": "RESOURCE_GROUP",
+            "value": "[resourceGroup().name]"
+          },
+          {
+            "name": "CONTAINER_NAME",
+            "value": "logs"
+          },
+          {
+            "name": "POLICY_NAME",
+            "value": "UploadLogs"
+          },
+          {
+            "name": "PERMISSION",
+            "value": "rw"
+          }
+        ],
+        "timeout": "PT10M",
+        "cleanupPreference": "Always",
+        "forceUpdateTag": "1",
+        "retentionInterval": "P1D"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', split(format('{0}/default/logs', variables('storageAccountFullName')), '/')[0], split(format('{0}/default/logs', variables('storageAccountFullName')), '/')[1], split(format('{0}/default/logs', variables('storageAccountFullName')), '/')[2])]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('functionAppPlanName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "[parameters('functionAppSku')]"
+      },
+      "properties": {
+        "reserved": false
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('functionAppResourceName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "functionapp",
+      "tags": "[parameters('tags')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('functionAppPlanName'))]",
+        "httpsOnly": true,
+        "siteConfig": {
+          "powerShellVersion": "~7",
+          "ftpsState": "Disabled",
+          "minTlsVersion": "1.2",
+          "scmType": "None",
+          "appSettings": [
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountFullName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountFullName')), '2023-01-01').keys[0].value, environment().suffixes.storage)]"
+            },
+            {
+              "name": "AllowedStorageAccounts",
+              "value": "[variables('storageAccountFullName')]"
+            },
+            {
+              "name": "StorageAccountLogsName",
+              "value": "[variables('storageAccountFullName')]"
+            },
+            {
+              "name": "StorageAccountLogsAccessKey",
+              "value": "[format('@Microsoft.KeyVault(SecretUri=https://{0}.vault.azure.net/secrets/StorageAccountKey)', variables('keyVaultResourceName'))]"
+            },
+            {
+              "name": "TenantId",
+              "value": "[subscription().tenantId]"
+            },
+            {
+              "name": "SubscriptionId",
+              "value": "[subscription().subscriptionId]"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~4"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "powershell"
+            },
+            {
+              "name": "WEBSITE_RUN_FROM_PACKAGE",
+              "value": "1"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[format('DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1};EndpointSuffix={2}', variables('storageAccountFullName'), listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountFullName')), '2023-01-01').keys[0].value, environment().suffixes.storage)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[toLower(parameters('functionAppName'))]"
+            },
+            {
+              "name": "KeyVaultName",
+              "value": "[parameters('keyVaultName')]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('functionAppPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountFullName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deploymentScripts",
+      "apiVersion": "2020-10-01",
+      "name": "zipDeployScript",
+      "location": "[resourceGroup().location]",
+      "kind": "AzureCLI",
+      "identity": {
+        "type": "UserAssigned",
+        "userAssignedIdentities": {
+          "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity'))]": {}
+        }
+      },
+      "properties": {
+        "azCliVersion": "2.20.0",
+        "scriptContent": "      curl -L -o app.zip https://github.com/MSEndpointMgr/IntuneLogCollector/raw/main/Packages/IntuneLogCollector-FuncApp-1.0.0.zip\r\n      az webapp deployment source config-zip \\\r\n        --resource-group $RESOURCE_GROUP \\\r\n        --name $FUNCTION_APP_NAME \\\r\n        --src app.zip\r\n    ",
+        "environmentVariables": [
+          {
+            "name": "RESOURCE_GROUP",
+            "value": "[resourceGroup().name]"
+          },
+          {
+            "name": "FUNCTION_APP_NAME",
+            "value": "[variables('functionAppResourceName')]"
+          }
+        ],
+        "timeout": "PT30M",
+        "cleanupPreference": "Always",
+        "forceUpdateTag": "1",
+        "retentionInterval": "P1D"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppResourceName'))]",
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', 'logcoll-script-identity')]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2023-02-01",
+      "name": "[variables('keyVaultResourceName')]",
+      "location": "[resourceGroup().location]",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "tenantId": "[subscription().tenantId]",
+            "objectId": "[reference(resourceId('Microsoft.Web/sites', variables('functionAppResourceName')), '2022-03-01', 'full').identity.principalId]",
+            "permissions": {
+              "secrets": [
+                "get",
+                "list"
+              ]
+            }
+          }
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('functionAppResourceName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2023-02-01",
+      "name": "[format('{0}/{1}', variables('keyVaultResourceName'), 'StorageAccountKey')]",
+      "properties": {
+        "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountFullName')), '2023-01-01').keys[0].value]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultResourceName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountFullName'))]"
+      ]
+    }
+  ]
+}

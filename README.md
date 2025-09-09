@@ -78,7 +78,7 @@ This repository contains an Azure solution for deploying the Intune Log Collecto
 
 Use the Deploy to Azure button and follow the portal prompts to configure and deploy the solution:
 
-  [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMSEndpointMgr%2FIntuneLogCollector%2Fmain%2FDeploy%2Flogcoll-spec-main.json)
+  [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMSEndpointMgr%2FIntuneLogCollector%2Fmain%2FDeploy%2Flogcoll-spec.json)
 
 ### Post-Deployment Cleanup
 
