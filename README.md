@@ -34,8 +34,7 @@ This repository contains an Azure solution for deploying the Intune Log Collecto
 3. **Publish the template spec (Bicep):**
 
    **PowerShell:**
-   > [!NOTE]
-   > Bicep CLI must be installed locally for PowerShell deployments. [Install Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
+   > **Note:** Bicep CLI must be installed locally for PowerShell deployments. [Install Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/install)
    ```pwsh
    New-AzTemplateSpec `
      -Name "IntuneLogCollector" `
