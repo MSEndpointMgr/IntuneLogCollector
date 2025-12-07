@@ -46,19 +46,6 @@ This repository contains an Azure solution for deploying the Intune Log Collecto
      -UIFormDefinitionFile "Deploy/logcollector-def.json"
    ```
 
-   **Azure CLI:**
-   > [!NOTE]
-   > Bicep support is built into Azure CLI (no separate install required).
-  ```pwsh
-  # Install only the required Microsoft Graph submodules for this scenario:
-  Install-Module Microsoft.Graph.Authentication -Scope CurrentUser
-  Install-Module Microsoft.Graph.Applications -Scope CurrentUser
-  ```
-  > The required commands (Connect-MgGraph, Get-MgServicePrincipal, New-MgServicePrincipalAppRoleAssignment, etc.) are available after importing these submodules. You do not need to install the full Microsoft.Graph module.
-     --ui-form-definition Deploy/logcollector-def.json
-   ```
-   Replace `<your-resource-group>` and `<your-location>` with your values.
-
 4. **Get the template spec resource ID:**
    ```pwsh
    $specId = (Get-AzTemplateSpec -Name "IntuneLogCollector" -ResourceGroupName "<your-resource-group>").Versions["1.0.0"].Id
